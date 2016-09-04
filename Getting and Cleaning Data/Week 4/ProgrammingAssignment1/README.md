@@ -1,9 +1,9 @@
-= Programming Assignment =
+## Programming Assignment
 
 This repo contains the solution to the programming assignment in Week 4 of the course
 Getting and Cleaning Data from the Data Science specialization in Coursera.
 
-== Running the script ==
+### Running the script
 
 To run the data analysis script, you need to checkout this repo and execute the following command in
 R or Rstudio:
@@ -15,7 +15,7 @@ source("path/to/repo/run_analysis.R")
 The script produces the file *means.txt*. Please refer to the CodeBook for further information
 about the file's contents.
 
-== Reading the output ==
+### Reading the output
 
 To read the produced output file, use the following command in R or Rstudio:
 
@@ -23,7 +23,7 @@ To read the produced output file, use the following command in R or Rstudio:
 means <- read.table("path/to/repo/means.txt", check.names = FALSE)
 ```
 
-== Code structure ==
+### Code structure
 
 *run_analysis.R* makes use of the follwing helper scripts:
 
