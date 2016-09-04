@@ -20,7 +20,7 @@ about the file's contents.
 To read the produced output file, use the following command in R or Rstudio:
 
 ```r
-means <- read.table("path/to/repo/means.txt", check.names = FALSE)
+means <- read.table("path/to/repo/means.txt", header = TRUE, check.names = FALSE)
 ```
 
 ### Code structure
