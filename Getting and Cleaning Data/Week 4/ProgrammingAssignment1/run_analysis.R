@@ -21,7 +21,7 @@ data <- rbind(train, test)
 ## Calculate the average values of each data column for each (Activity, Subject)
 ## pair in the data above. Write the result to a file.
 means <- aggregate(. ~ Subject + Activity, data, mean)
-write.table(means, "means.txt")
+write.table(means, "means.txt", row.names = FALSE)
 
 ## Restore the current working directory
 setwd(wd)
