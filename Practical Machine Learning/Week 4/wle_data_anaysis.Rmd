@@ -1,0 +1,111 @@
+---
+title: "Weight Lifting Exercises Analysis"
+author: "Radan Ganchev"
+date: "6/25/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Summary
+
+This document contains an analysis of the data gathered from accelerometers attached to different body parts of 6 people performing a weight lifting excercise. The goal of this report is to build a model which can be used to make predictions of whether the excercise has been performed correctly or not.
+
+## Loading the data
+
+The data is provided by the following source: http://groupware.les.inf.puc-rio.br/har. It has been split into training and testing set in advance.
+
+```{r}
+na.strings <- c('', '""', 'NA', '#DIV/0!')
+training <- read.csv('pml-training.csv', na.strings = na.strings)
+testing <- read.csv('pml-testing.csv', na.strings = na.strings)
+
+dim(training)
+dim(testing)
+```
+
+We see that we have 19622 observations of 160 variables for training and 20 more observations in the testing set. Let's put aside a part of the training data for validation so that we can compare the different models that we build later.
+
+```{r message=FALSE, warning=FALSE}
+library(caret)
+set.seed(121314)
+inTrain <- createDataPartition(training$classe, p = 0.8, list = FALSE)
+validation <- training[-inTrain,]
+training <- training[inTrain,]
+
+dim(validation)
+```
+
+## Feature selection
+
+After inspecting the data, we see that it is split into windows of readings that have occurred in small intervals of time. These windows are denoted by the values in the `num_window` column. The `new_window` column on the other hand, denotes the start of a new window and rows where a new window begins also contain some aggregate statistics for the whole window. These statistics are functions of the rest of the columns.
+
+We want to train our model to recognize separate independent readings and not windows of readings. Therefore, we will remove all timestamp and window data from the training set.
+
+```{r}
+training <- training[, !names(training) %in% c("X", "num_window", "new_window", "raw_timestamp_part_1", "raw_timestamp_part_2", "cvtd_timestamp")]
+```
+
+Next, we will remove the aggregation columns since they don't make sense without the window data. We can easily identify these columns because they contain very few non-NA values.
+
+```{r}
+naPercent <- colMeans(is.na(training))
+summary(naPercent)
+
+training <- training[, naPercent < .95]
+summary(colMeans(is.na(training)))
+
+dim(training)
+```
+
+Now we're left with only 54 columns and none of them contain any missing values. Let's see what are the types of these columns.
+
+```{r}
+colClasses <- sapply(training, class)
+unique(colClasses)
+names(training)[colClasses == "factor"]
+```
+
+We see that all of our variables are numeric (sensor readings) except for the `user_name` and `classe`. `classe` is the dependent variable that we want to predict. However, `user_name` can be removed from the training set because it is irrelevant to the outcome.
+
+```{r}
+training <- training[, names(training) != "user_name"]
+```
+
+## Building a model
+
+We will try to build a random forest model and tune it. Training a random forest with a large number of trees on this dataset takes a lot of time, so we'll start with a few trees and see what results we get.
+
+```{r}
+set.seed(123)
+rf10 <- train(classe ~ ., data=training, method="rf", ntree=10)
+```
+
+Let's investigate the results
+```{r}
+rf10$results
+mean(predict(rf10, validation) == validation$classe)
+plot(rf10$finalModel, main = "Error rate for a 10-tree random forest")
+```
+
+We see that we have about 98% accuracy on the training an validation sets, but the OOB error decreases almost linearly with the number of trees. Hence, we can hope for an even better accuracy with a little larger number of trees.
+
+```{r}
+set.seed(123)
+rf40 <- train(classe ~ ., data=training, method="rf", ntree=40)
+rf40$results
+mean(predict(rf40, validation) == validation$classe)
+plot(rf40$finalModel, main = "Error rate for a 40-tree random forest")
+```
+
+With 40 trees we got 99% accuracy on the training an validation sets, which is sufficient for our purposes.
+
+# Test set predictions
+
+Finally, apply our model to the test set.
+
+```{r}
+predict(rf40, testing)
+```
