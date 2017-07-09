@@ -1,0 +1,35 @@
+---
+title: "Starbucks locations in US & Canada"
+date: "July 9, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+library(leaflet)
+starbucks <- read.csv("Starbucks.csv", header = FALSE, col.names = c("lon", "lat", "name", "address"))
+
+starbucks$popup <- paste0("<h5>", starbucks$name, "</h5><br>", starbucks$address)
+
+starbucksIcon <- makeIcon(
+    iconUrl = "starbucks.png",
+    iconWidth = 32, iconHeight = 32,
+    iconAnchorX = 16, iconAnchorY = 16
+)
+
+starbucks %>%
+    leaflet() %>%
+    addTiles() %>%
+    addMarkers(
+        icon = starbucksIcon,
+        popup = starbucks$popup,
+        clusterOptions = markerClusterOptions()
+    )
+```
+
+#### Resources
+ - *Starbucks coordinates taken from: [POI Factory](http://www.poi-factory.com/node/12311)*
+ - *Starbucks icon taken from: [Deviant Art user mahesh69a](https://mahesh69a.deviantart.com/art/Starbucks-Logo-Icon-246618936)*
