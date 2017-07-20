@@ -1,0 +1,77 @@
+---
+title: "Starbucks Cafes Per Capita in the US"
+author: "Radan Ganchev"
+date: "7/20/2017"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+library(sp)
+library(maps)
+library(maptools)
+library(plotly)
+
+latlong2state <- function(points) {
+    states <- map("state", fill=TRUE, col="transparent", plot=FALSE)
+    stateNames <- sapply(strsplit(states$names, ":"),
+                         function(x) x[1])
+    projString <- CRS("+proj=longlat +datum=WGS84")
+    statePolygons <- map2SpatialPolygons(states,
+                                         IDs=stateNames,
+                                         proj4string=projString)
+    spatialPoints <- SpatialPoints(points,
+                                   proj4string=projString)
+
+    indices <- over(spatialPoints, statePolygons)
+    stateNames <- sapply(statePolygons@polygons, function(x) x@ID)
+    stateNames[indices]
+}
+
+starbucks <- read.csv("Starbucks.csv", header = FALSE, col.names = c("lon", "lat", "name", "address"))
+
+starbucks$state <- latlong2state(data.frame(x=starbucks$lon, y=starbucks$lat))
+ncafes <- as.data.frame(table(starbucks$state))
+names(ncafes) <- c("state", "ncafes")
+population <- read.csv("population.csv", stringsAsFactors = FALSE)
+
+df <- merge(ncafes, population, by = "state")
+df$state <- state.abb[match(df$state, tolower(state.name))]
+df$cafes_per_capita <- 1e05 * df$ncafes / df$population
+df$popup <- paste("<b>Cafes Per 10k Residents:", round(df$cafes_per_capita, 2), "</b><br>",
+                  "Starbucks Cafes:", df$ncafes, "<br>",
+                  "Population:", df$population)
+```
+
+
+## State Population vs. Number of Starbucks Cafes in the US
+```{r}
+df %>%
+    plot_ly(x = ~population) %>%
+    add_markers(y = ~ncafes, text = ~state, name = "# of Cafes", showlegend = FALSE) %>%
+    add_lines(y = ~fitted(lm(ncafes ~ population)), name = "Regression Line") %>%
+    layout(xaxis = list(title = "State Population"),
+           yaxis = list(title = "# of Starbucks Cafes"))
+```
+
+
+## Starbucks Cafes Per 10,000 Residents
+```{r}
+borders <- list(color = toRGB("red"))
+# Set up some mapping options
+map_options <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+plot_ly(z = ~df$cafes_per_capita, text = ~df$popup, locations = ~df$state,
+        type = 'choropleth', locationmode = 'USA-states', 
+        color = df$cafes_per_capita, colors = 'Greens', marker = list(line = borders)) %>%
+  layout(geo = map_options)
+```
+
+## Thanks!
