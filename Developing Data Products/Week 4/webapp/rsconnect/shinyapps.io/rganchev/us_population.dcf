@@ -1,0 +1,11 @@
+name: us_population
+title: US Population
+account: rganchev
+server: shinyapps.io
+appId: 206343
+bundleId: 947985
+url: https://rganchev.shinyapps.io/us_population/
+when: 1503296994.89034
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: us_population.html|us_population.Rmd|data/.DS_Store
