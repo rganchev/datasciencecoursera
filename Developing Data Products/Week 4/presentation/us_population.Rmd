@@ -1,0 +1,53 @@
+---
+title: "US Population Trends"
+author: "Radan Ganchev"
+date: "8/20/2017"
+output: ioslides_presentation
+---
+
+## State Population Data
+
+ - The **US Census Bureau** provides variuos census data and population estimates.
+ - Population estimates for the years 2010-2016 are available at this site: https://www.census.gov/data/tables/2016/demo/popest/nation-total.html
+ - Using this data we can estimate the current population trends in the US states.
+ - Quick look at the data
+```{r}
+population <- read.csv("data/population.csv")
+names(population)
+```
+
+## Sample Population Trend
+
+ - Using this data, we can calculate the population trend in any given state by fitting a linear regression line
+```{r, echo = FALSE}
+years <- 2010:2016
+state <- population[population$State == "Idaho",]
+yearlyPop <- c(state$X2010, state$X2011, state$X2012, state$X2013, state$X2014, state$X2015, state$X2016)
+plot(years, yearlyPop, type="l", col="red", lwd=2, yaxt="n",
+                     main = paste("Population Trend for", state$State),
+                     xlab = "Year",
+                     ylab = "Population")
+                legend("bottomright",
+                       legend = c("Population", "Regression Line"),
+                       lty = c(1, 1),
+                       lwd = c(2, 2),
+                       col = c("red", "blue"))
+                axis(2, at=axTicks(2), labels=sprintf("%.2fM", axTicks(2) / 1000000))
+                abline(lm(yearlyPop ~ years), col="blue", lwd=2)
+```
+
+## Shiny Web App
+
+ - The Shiny web application deployed [here](https://rganchev.shinyapps.io/us_population/) allows users to easily see the population trends in all american states.
+ 
+ - The interactive map can be used to access all relevant data and display a graphical representation of the trends.
+
+```{r fig.height=3.5, echo=FALSE}
+library(png)
+library(grid)
+img <- readPNG("webapp.png")
+grid.raster(img)
+```
+
+# Thanks!
+
